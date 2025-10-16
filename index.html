@@ -1,1 +1,82 @@
-<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>The Club Mahabaleshwar — Public Availability</title><link rel='stylesheet' href='css/style.css'></head><body><header><img src='assets/logo/clubmahabaleshwar_logo.png' alt='Logo'><h2>THE CLUB MAHABALESHWAR — PUBLIC AVAILABILITY (Next 6 Months)</h2><div class='small'>Calendar is visible to everyone. Booking confirmation will require OTP when LIVE.</div></header><div class='container grid' style='grid-template-columns:1.1fr 1fr;'><div class='card'><h3>Six‑Month Calendar (Visible to All)</h3><div id='calendarContainer'></div></div><div class='card'><h3>Booking Wizard (No Login)</h3><div><label>From</label><input type='date' id='fromDate'><label>To</label><input type='date' id='toDate'></div><div><label>Members (Adults)</label><select id='mAdults'></select><label>Children ≤10</label><select id='mKids'></select><label>Children 11–21</label><select id='mDepend'></select></div><div><label>Temporary Members (Adults)</label><select id='tAdults'></select><label>Temporary Members (Children 5–10)</label><select id='tKids'></select></div><div><select id='attrPet'><option value=''>Pet friendly?</option><option value='yes'>Yes</option><option value='no'>No</option></select><select id='attrWheel'><option value=''>Wheelchair?</option><option value='yes'>Yes</option><option value='no'>No</option></select><select id='attrAC'><option value=''>AC?</option><option value='yes'>Yes</option><option value='no'>No</option></select><select id='attrType'><option value=''>Room type</option><option>single</option><option>double</option></select></div><button class='btn' id='checkBtn'>Check Availability</button><div id='result' style='margin-top:10px;'></div><div class='small' style='margin-top:6px'>Block‑wise FREE rooms (click a block):</div><div id='blockSummary' style='margin-top:6px'></div></div></div><div class='container card'><h3>Room Numbers by Date</h3><p>Click “Check Availability” to list FREE rooms for each night. Click a block above to filter rooms by block. Click any room chip to select it for that night.</p><div id='roomLists'></div><div style='margin-top:10px'><strong>Selected rooms:</strong> <span id='selectionOut' class='small'>No rooms selected yet.</span></div></div><div class='container'><div class='card'><h3>Assistant</h3><div id='assistantOut' style='height:160px;overflow:auto;border:1px solid #eee;border-radius:10px;padding:10px;background:#fff'></div><div style='margin-top:8px'><button class='btn ghost' id='micBtn'>🎤 Speak</button><input type='text' id='assistantInput' placeholder='Type a question or “Book these rooms”…' style='width:60%'><button class='btn' id='sendBtn'>Send</button></div></div></div><footer class='footer small'>© The Club Mahabaleshwar — Static test build for review.</footer><script type='module' src='js/app.js'></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Club Mahabaleshwar — Public Availability</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <img src="assets/logo/clubmahabaleshwar_logo.png" alt="Club Mahabaleshwar Logo">
+  <h2>THE CLUB MAHABALESHWAR — PUBLIC AVAILABILITY (Next 6 Months)</h2>
+  <div class="small">Calendar is visible to everyone. Booking confirmation will require OTP when LIVE.</div>
+</header>
+
+<div class="container grid" style="grid-template-columns: 1.1fr 1fr;">
+  <div class="card">
+    <h3>Six-Month Calendar (Visible to All)</h3>
+    <div id="calendarContainer"></div>
+  </div>
+  <div class="card">
+    <h3>Booking Wizard (No Login)</h3>
+    <div>
+      <label>From</label><input type="date" id="fromDate">
+      <label>To</label><input type="date" id="toDate">
+    </div>
+    <div>
+      <label>Members (Adults)</label><select id="mAdults"></select>
+      <label>Children ≤10</label><select id="mKids"></select>
+      <label>Children 11–21</label><select id="mDepend"></select>
+    </div>
+    <div>
+      <label>Temporary Members (Adults)</label><select id="tAdults"></select>
+      <label>Temporary Members (Children 5–10)</label><select id="tKids"></select>
+    </div>
+    <div>
+      <select id="attrPet"><option value="">Pet friendly?</option><option value="yes">Yes</option><option value="no">No</option></select>
+      <select id="attrWheel"><option value="">Wheelchair?</option><option value="yes">Yes</option><option value="no">No</option></select>
+      <select id="attrAC"><option value="">AC?</option><option value="yes">Yes</option><option value="no">No</option></select>
+      <select id="attrType"><option value="">Room type</option><option>single</option><option>double</option></select>
+    </div>
+    <button class="btn" id="checkBtn">Check Availability</button>
+    <div id="result" style="margin-top:10px;"></div>
+    <div class="small" style="margin-top:6px">Block-wise FREE rooms (click a block):</div>
+    <div id="blockSummary" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<div class="container card">
+  <h3>Room Numbers by Date</h3>
+  <p>Click “Check Availability” to list FREE rooms for each night. Click a block above to filter rooms by block. Click any room chip to select it for that night.</p>
+  <div id="roomLists"></div>
+  <div style='margin-top:10px'><strong>Selected rooms:</strong> <span id='selectionOut' class='small'>No rooms selected yet.</span></div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h3>Assistant</h3>
+    <div id="assistantOut" style="height:160px; overflow:auto; border:1px solid #eee; border-radius:10px; padding:10px; background:#fff"></div>
+    <div style="margin-top:8px">
+      <button class="btn ghost" id="micBtn">🎤 Speak</button>
+      <input type="text" id="assistantInput" placeholder="Type a question or “Book these rooms”…" style="width:60%">
+      <button class="btn" id="sendBtn">Send</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer small">© The Club Mahabaleshwar — Static test build for review.</footer>
+
+<!-- tiny global error logger so we see problems in the page -->
+<script>
+  window.addEventListener('error', e => {
+    console.error('JS Error:', e.error || e.message);
+    const r = document.getElementById('result');
+    if (r) r.innerHTML += "<p class='bad'>Error: " + (e.message || e.error) + "</p>";
+  });
+</script>
+
+<!-- IMPORTANT: type=module, exact paths, and a cache-buster -->
+<script type="module" src="js/app.js?v=fix2"></script>
+</body>
+</html>
