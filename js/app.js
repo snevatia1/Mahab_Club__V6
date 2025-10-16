@@ -1,6 +1,15 @@
 import { drawSixMonthCalendar } from './calendar.js';
 import { loadJSON } from './dataLoader.js';
-import { Assistant } from './assistant.js';
+
+// inline Assistant (guards if missing file)
+let AssistantClass = null;
+try {
+  const mod = await import('./assistant.js');
+  AssistantClass = mod.Assistant;
+} catch (e) {
+  console.warn('assistant.js not found or failed, continuing without voice:', e);
+}
+
 let assistant;
 
 const state = {
@@ -12,27 +21,47 @@ const state = {
   }
 };
 
+// Expose minimal debug
+window.__dbg = { state };
+
 async function init(){
   try{
     const rooms = await loadJSON('data/rooms.json');
     rooms.forEach(r => state.rooms[r.id]=r);
+
+    // Basic sanity check so we don't render empty UI
+    if (Object.keys(state.rooms).length === 0) {
+      const r = document.getElementById('result');
+      if (r) r.innerHTML = "<p class='bad'>No rooms loaded. Check data/rooms.json exists and path is correct (case-sensitive).</p>";
+      return;
+    }
+
     drawSixMonthCalendar(document.getElementById('calendarContainer'), state.restricted);
     fillDropdowns();
     document.getElementById('checkBtn').addEventListener('click', onCheck);
-    assistant = new Assistant('assistantOut','micBtn','assistantInput','sendBtn');
-    window.__filterBlock = filterByBlock; // for inline clicks
+
+    if (AssistantClass) {
+      assistant = new AssistantClass('assistantOut','micBtn','assistantInput','sendBtn');
+    } else {
+      const out = document.getElementById('assistantOut');
+      if (out) out.innerHTML = "<em>Assistant unavailable in this build.</em>";
+    }
+
+    // expose filter for inline onclick
+    window.__filterBlock = filterByBlock;
   }catch(e){
-    document.getElementById('calendarContainer').innerHTML = '<p class="bad">Failed to initialize: '+e.message+'</p>';
+    console.error(e);
+    const r = document.getElementById('result');
+    if (r) r.innerHTML = "<p class='bad'>Init failed: " + (e.message||e) + "</p>";
   }
 }
 
 function fillDropdowns(){
   ['mAdults','mKids','mDepend','tAdults','tKids'].forEach((id,i)=>fill(id,6));
-  function fill(id,max){ const s=document.getElementById(id); s.innerHTML=''; for(let i=0;i<=max;i++){ const o=document.createElement('option'); o.value=i; o.textContent=i; s.appendChild(o);} }
+  function fill(id,max){ const s=document.getElementById(id); if(!s) return; s.innerHTML=''; for(let i=0;i<=max;i++){ const o=document.createElement('option'); o.value=i; o.textContent=i; s.appendChild(o);} }
 }
 
 /* ---------- Block helpers (robust) ---------- */
-// Always get a clean block: prefer room.meta.block; else first letter in id.
 function getBlockFor(id){
   const meta = state.rooms[id] || {};
   let b = (meta.block ?? '').toString().trim().toUpperCase();
@@ -63,7 +92,7 @@ function filterByBlock(block){
       p.style.display = (block === 'ALL' || b === block) ? 'inline-block' : 'none';
     });
   });
-  // simple visual highlight without editing CSS file
+  // simple highlight without editing CSS
   document.querySelectorAll('[data-block]').forEach(btn => {
     btn.style.outline = (btn.dataset.block === block) ? '2px solid #111' : '';
   });
@@ -74,15 +103,20 @@ function renderBlockSummary(freeList){
   if(!wrap) return;
   const byBlock = groupByBlock(freeList);
   const blocks = Object.keys(byBlock).sort();
+
   const btn = (b, label) =>
     `<button class="btn ghost" data-block="${b}" title="Show ${b==='ALL'?'all':b} block rooms" onclick="window.__filterBlock && window.__filterBlock('${b}')">${label}</button>`;
+
   const allBtn = btn('ALL', `All : ${freeList.length}`);
   wrap.innerHTML = [allBtn, ...blocks.map(b => btn(b, `${b} : ${byBlock[b].length}`))].join(' ');
 }
 /* ---------- end helpers ---------- */
 
 function listRooms(dates){
-  const roomLists = document.getElementById('roomLists'); roomLists.innerHTML='';
+  const roomLists = document.getElementById('roomLists'); 
+  if(!roomLists){ return {}; }
+  roomLists.innerHTML='';
+
   const bookedMap = {}; // All free in TEST
   let lastFree = [];
 
@@ -119,7 +153,8 @@ function toggleRoom(iso, id){
   if(!selection.rooms[iso]) selection.rooms[iso] = new Set();
   if(selection.rooms[iso].has(id)) selection.rooms[iso].delete(id);
   else selection.rooms[iso].add(id);
-  document.getElementById('selectionOut').textContent = summarySelection();
+  const out = document.getElementById('selectionOut');
+  if(out) out.textContent = summarySelection();
 }
 
 function summarySelection(){
@@ -137,19 +172,23 @@ document.body.addEventListener('click', (e)=>{
 });
 
 function onCheck(){
-  const from = document.getElementById('fromDate').value;
-  const to   = document.getElementById('toDate').value;
-  const res  = document.getElementById('result'); res.innerHTML='';
-  if(!from||!to){ res.textContent='Please choose a valid date range.'; return; }
+  const from = document.getElementById('fromDate')?.value;
+  const to   = document.getElementById('toDate')?.value;
+  const res  = document.getElementById('result'); 
+  if(res) res.innerHTML='';
+
+  if(!from||!to){ if(res) res.textContent='Please choose a valid date range.'; return; }
   const start=new Date(from), end=new Date(to);
-  if(end<=start){ res.textContent='“To” must be after “From”.'; return; }
+  if(end<=start){ if(res) res.textContent='“To” must be after “From”.'; return; }
+
   const dates=[]; for(let d=new Date(start); d<end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10));
-  res.innerHTML = `<p>Searching ${dates.length} night(s)…</p>`;
+  if(res) res.innerHTML = `<p>Searching ${dates.length} night(s)…</p>`;
+
   const bookedMap = listRooms(dates);
   const total = Object.keys(state.rooms).length;
   const counts = dates.map(iso => ({ free: total - (bookedMap[iso]||[]).length, booked: (bookedMap[iso]||[]).length }));
   const freeMin = Math.min(...counts.map(x=>x.free));
-  res.innerHTML += `<p><strong>Availability:</strong> Minimum free rooms across your dates: ${freeMin} of ${total}.</p>`;
+  if(res) res.innerHTML += `<p><strong>Availability:</strong> Minimum free rooms across your dates: ${freeMin} of ${total}.</p>`;
 }
 
 init();
