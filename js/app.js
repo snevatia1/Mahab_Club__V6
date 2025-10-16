@@ -20,6 +20,8 @@ async function init(){
     fillDropdowns();
     document.getElementById('checkBtn').addEventListener('click', onCheck);
     assistant = new Assistant('assistantOut','micBtn','assistantInput','sendBtn');
+    // expose after init
+    window.__filterBlock = filterByBlock;
   }catch(e){
     document.getElementById('calendarContainer').innerHTML = '<p class="bad">Failed to initialize: '+e.message+'</p>';
   }
@@ -51,9 +53,9 @@ function filterByBlock(block){
       p.style.display = (block === 'ALL' || b === block) ? 'inline-block' : 'none';
     });
   });
-  // visual active state (optional if you can't update CSS)
+  // optional highlight (will work even if CSS is one line)
   document.querySelectorAll('[data-block]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.block === block);
+    btn.style.outline = (btn.dataset.block === block) ? '2px solid #111' : '';
   });
 }
 
@@ -62,16 +64,11 @@ function renderBlockSummary(freeList){
   if(!wrap) return;
   const byBlock = groupByBlock(freeList);
   const blocks = Object.keys(byBlock).sort();
-  const html = [
-    `<button class="btn ghost" data-block="ALL" title="Show all blocks">All : ${freeList.length}</button>`,
-    ...blocks.map(b => `<button class="btn ghost" data-block="${b}" title="Show ${b} block rooms">${b} : ${byBlock[b].length}</button>`)
-  ].join(' ');
-  wrap.innerHTML = html;
-
-  // ✅ Attach click handlers explicitly to these buttons
-  wrap.querySelectorAll('[data-block]').forEach(btn=>{
-    btn.onclick = () => filterByBlock(btn.dataset.block);
-  });
+  // Inline onclick calls the global function — avoids listener issues.
+  const btn = (b, label) =>
+    `<button class="btn ghost" data-block="${b}" title="Show ${b==='ALL'?'all':b} block rooms" onclick="window.__filterBlock && window.__filterBlock('${b}')">${label}</button>`;
+  const allBtn = btn('ALL', `All : ${freeList.length}`);
+  wrap.innerHTML = [allBtn, ...blocks.map(b => btn(b, `${b} : ${byBlock[b].length}`))].join(' ');
 }
 /* ---------- end helpers ---------- */
 
