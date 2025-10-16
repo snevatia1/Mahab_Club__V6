@@ -1,15 +1,7 @@
+// js/app.js
 import { drawSixMonthCalendar } from './calendar.js';
 import { loadJSON } from './dataLoader.js';
-
-// inline Assistant (guards if missing file)
-let AssistantClass = null;
-try {
-  const mod = await import('./assistant.js');
-  AssistantClass = mod.Assistant;
-} catch (e) {
-  console.warn('assistant.js not found or failed, continuing without voice:', e);
-}
-
+import { Assistant } from './assistant.js';
 let assistant;
 
 const state = {
@@ -21,33 +13,36 @@ const state = {
   }
 };
 
-// Expose minimal debug
-window.__dbg = { state };
-
 async function init(){
   try{
     const rooms = await loadJSON('data/rooms.json');
     rooms.forEach(r => state.rooms[r.id]=r);
 
-    // Basic sanity check so we don't render empty UI
-    if (Object.keys(state.rooms).length === 0) {
-      const r = document.getElementById('result');
-      if (r) r.innerHTML = "<p class='bad'>No rooms loaded. Check data/rooms.json exists and path is correct (case-sensitive).</p>";
-      return;
-    }
+    const totalRooms = Object.keys(state.rooms).length;
 
-    drawSixMonthCalendar(document.getElementById('calendarContainer'), state.restricted);
+    // Render calendar with counts and range picking
+    drawSixMonthCalendar(
+      document.getElementById('calendarContainer'),
+      {
+        restricted: state.restricted,
+        totalRooms,
+        onPickRange: (fromISO, toISO) => {
+          // fill inputs then run availability
+          const from = document.getElementById('fromDate');
+          const to   = document.getElementById('toDate');
+          if(from && to){ from.value = fromISO; to.value = toISO; }
+          onCheck(); // auto-run
+        }
+      }
+    );
+
     fillDropdowns();
     document.getElementById('checkBtn').addEventListener('click', onCheck);
 
-    if (AssistantClass) {
-      assistant = new AssistantClass('assistantOut','micBtn','assistantInput','sendBtn');
-    } else {
-      const out = document.getElementById('assistantOut');
-      if (out) out.innerHTML = "<em>Assistant unavailable in this build.</em>";
-    }
+    // Assistant (voice+typing)
+    assistant = new Assistant('assistantOut','micBtn','assistantInput','sendBtn');
 
-    // expose filter for inline onclick
+    // global for inline calls (kept)
     window.__filterBlock = filterByBlock;
   }catch(e){
     console.error(e);
@@ -146,7 +141,7 @@ function listRooms(dates){
   return bookedMap;
 }
 
-// Simple room selection registry
+// Selection registry
 const selection = { rooms: {} };
 
 function toggleRoom(iso, id){
@@ -164,7 +159,7 @@ function summarySelection(){
   return parts.join("  •  ");
 }
 
-// Delegate clicks for room chips
+// Clicks for room chips
 document.body.addEventListener('click', (e)=>{
   const pill = e.target.closest('.room-pill[data-iso][data-id]');
   if(!pill) return;
@@ -181,7 +176,10 @@ function onCheck(){
   const start=new Date(from), end=new Date(to);
   if(end<=start){ if(res) res.textContent='“To” must be after “From”.'; return; }
 
-  const dates=[]; for(let d=new Date(start); d<end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10));
+  const dates=[]; for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10));
+  // nights = inclusive range → for availability we typically exclude checkout day; keep it simple here.
+  if(dates.length > 1) dates.pop(); 
+
   if(res) res.innerHTML = `<p>Searching ${dates.length} night(s)…</p>`;
 
   const bookedMap = listRooms(dates);
