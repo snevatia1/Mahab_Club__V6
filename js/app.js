@@ -20,8 +20,7 @@ async function init(){
     fillDropdowns();
     document.getElementById('checkBtn').addEventListener('click', onCheck);
     assistant = new Assistant('assistantOut','micBtn','assistantInput','sendBtn');
-    // expose after init
-    window.__filterBlock = filterByBlock;
+    window.__filterBlock = filterByBlock; // for inline clicks
   }catch(e){
     document.getElementById('calendarContainer').innerHTML = '<p class="bad">Failed to initialize: '+e.message+'</p>';
   }
@@ -32,11 +31,22 @@ function fillDropdowns(){
   function fill(id,max){ const s=document.getElementById(id); s.innerHTML=''; for(let i=0;i<=max;i++){ const o=document.createElement('option'); o.value=i; o.textContent=i; s.appendChild(o);} }
 }
 
-/* ---------- Block helpers ---------- */
+/* ---------- Block helpers (robust) ---------- */
+// Always get a clean block: prefer room.meta.block; else first letter in id.
+function getBlockFor(id){
+  const meta = state.rooms[id] || {};
+  let b = (meta.block ?? '').toString().trim().toUpperCase();
+  if(!b){
+    const m = String(id).match(/[A-Za-z]/);
+    if(m) b = m[0].toUpperCase();
+  }
+  return b || 'UNKNOWN';
+}
+
 function groupByBlock(list){
   const g = {};
   list.forEach(id => {
-    const b = (state.rooms[id]?.block || 'Unknown');
+    const b = getBlockFor(id);
     if(!g[b]) g[b] = [];
     g[b].push(id);
   });
@@ -49,11 +59,11 @@ function filterByBlock(block){
     const freePills = div.querySelectorAll('.room-pill[data-iso][data-id]');
     freePills.forEach(p => {
       const id = p.dataset.id;
-      const b = (state.rooms[id]?.block || '');
+      const b = getBlockFor(id);
       p.style.display = (block === 'ALL' || b === block) ? 'inline-block' : 'none';
     });
   });
-  // optional highlight (will work even if CSS is one line)
+  // simple visual highlight without editing CSS file
   document.querySelectorAll('[data-block]').forEach(btn => {
     btn.style.outline = (btn.dataset.block === block) ? '2px solid #111' : '';
   });
@@ -64,7 +74,6 @@ function renderBlockSummary(freeList){
   if(!wrap) return;
   const byBlock = groupByBlock(freeList);
   const blocks = Object.keys(byBlock).sort();
-  // Inline onclick calls the global function — avoids listener issues.
   const btn = (b, label) =>
     `<button class="btn ghost" data-block="${b}" title="Show ${b==='ALL'?'all':b} block rooms" onclick="window.__filterBlock && window.__filterBlock('${b}')">${label}</button>`;
   const allBtn = btn('ALL', `All : ${freeList.length}`);
@@ -87,7 +96,12 @@ function listRooms(dates){
     div.className='card'; 
     div.setAttribute('data-iso', iso);
 
-    const pill = (iso,id) => `<span class='room-pill' data-iso='${iso}' data-id='${id}' title='Click to select'>${id} • ${state.rooms[id]?.block||''} • ${(state.rooms[id]?.ac?'AC':'Non-AC')}</span>`;
+    const pill = (iso,id) => {
+      const block = getBlockFor(id);
+      const ac = (state.rooms[id]?.ac ? 'AC' : 'Non-AC');
+      return `<span class='room-pill' data-iso='${iso}' data-id='${id}' title='Click to select'>${id} • ${block} • ${ac}</span>`;
+    };
+
     div.innerHTML = `<h4>${iso}</h4>
       <div><strong>FREE:</strong> ${free.map(id=>pill(iso,id)).join(' ')||'—'}</div>
       <div style='margin-top:6px'><strong>BOOKED:</strong> —</div>`;
