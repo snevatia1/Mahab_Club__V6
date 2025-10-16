@@ -30,7 +30,7 @@ function fillDropdowns(){
   function fill(id,max){ const s=document.getElementById(id); s.innerHTML=''; for(let i=0;i<=max;i++){ const o=document.createElement('option'); o.value=i; o.textContent=i; s.appendChild(o);} }
 }
 
-/* ---------- Block helpers (NEW) ---------- */
+/* ---------- Block helpers ---------- */
 function groupByBlock(list){
   const g = {};
   list.forEach(id => {
@@ -39,17 +39,6 @@ function groupByBlock(list){
     g[b].push(id);
   });
   return g;
-}
-
-function renderBlockSummary(freeList){
-  const wrap = document.getElementById('blockSummary');
-  if(!wrap) return;
-  const byBlock = groupByBlock(freeList);
-  const blocks = Object.keys(byBlock).sort();
-  const allBtn = `<button class="btn ghost" data-block="ALL" title="Show all blocks">All : ${freeList.length}</button>`;
-  wrap.innerHTML = allBtn + " " + blocks
-    .map(b => `<button class="btn ghost" data-block="${b}" title="Show ${b} block rooms">${b} : ${byBlock[b].length}</button>`)
-    .join(" ");
 }
 
 function filterByBlock(block){
@@ -62,18 +51,28 @@ function filterByBlock(block){
       p.style.display = (block === 'ALL' || b === block) ? 'inline-block' : 'none';
     });
   });
-  // visual active state
+  // visual active state (optional if you can't update CSS)
   document.querySelectorAll('[data-block]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.block === block);
   });
 }
 
-// Listen for clicks on any block button
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest('[data-block]');
-  if(!btn) return;
-  filterByBlock(btn.dataset.block);
-});
+function renderBlockSummary(freeList){
+  const wrap = document.getElementById('blockSummary');
+  if(!wrap) return;
+  const byBlock = groupByBlock(freeList);
+  const blocks = Object.keys(byBlock).sort();
+  const html = [
+    `<button class="btn ghost" data-block="ALL" title="Show all blocks">All : ${freeList.length}</button>`,
+    ...blocks.map(b => `<button class="btn ghost" data-block="${b}" title="Show ${b} block rooms">${b} : ${byBlock[b].length}</button>`)
+  ].join(' ');
+  wrap.innerHTML = html;
+
+  // ✅ Attach click handlers explicitly to these buttons
+  wrap.querySelectorAll('[data-block]').forEach(btn=>{
+    btn.onclick = () => filterByBlock(btn.dataset.block);
+  });
+}
 /* ---------- end helpers ---------- */
 
 function listRooms(dates){
@@ -98,7 +97,6 @@ function listRooms(dates){
     roomLists.appendChild(div);
   });
 
-  // render block summary using the last date's free list
   renderBlockSummary(lastFree);
   return bookedMap;
 }
@@ -120,7 +118,7 @@ function summarySelection(){
   return parts.join("  •  ");
 }
 
-// Delegate clicks for .room-pill
+// Delegate clicks for room chips
 document.body.addEventListener('click', (e)=>{
   const pill = e.target.closest('.room-pill[data-iso][data-id]');
   if(!pill) return;
