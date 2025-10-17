@@ -1,0 +1,87 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Club Mahabaleshwar — Public Availability</title>
+  <link rel="stylesheet" href="css/style.css?v=v7b">
+</head>
+<body>
+<header>
+  <img src="assets/logo/clubmahabaleshwar_logo.png" alt="Club Mahabaleshwar Logo">
+  <h2>THE CLUB MAHABALESHWAR — PUBLIC AVAILABILITY (Next 6 Months)</h2>
+  <div class="small">Calendar is visible to everyone. Booking confirmation will require OTP when LIVE.</div>
+</header>
+
+<div class="container grid" style="grid-template-columns: 1.1fr 1fr;">
+  <div class="card">
+    <h3>Six-Month Calendar (Visible to All)</h3>
+    <div id="calendarContainer"></div>
+  </div>
+
+  <div class="card">
+    <h3>Booking Wizard (No Login)</h3>
+    <div>
+      <label>From</label><input type="date" id="fromDate">
+      <label>To (checkout)</label><input type="date" id="toDate">
+    </div>
+
+    <div class="row">
+      <label>Members (Adults)</label><select id="mAdults"></select>
+      <label>Senior Members (Adults)</label><select id="mSeniors"></select>
+    </div>
+    <div class="row">
+      <label>Children ≤10</label><select id="mKids"></select>
+      <label>Children 11–21</label><select id="mDepend"></select>
+    </div>
+    <div class="row">
+      <label>Temporary Members (Adults)</label><select id="tAdults"></select>
+      <label>Temporary Members (Children 5–10)</label><select id="tKids"></select>
+    </div>
+
+    <div class="row">
+      <select id="attrWheel"><option value="">Wheelchair?</option><option value="yes">Yes</option><option value="no">No</option></select>
+      <select id="attrPet"><option value="">Pet friendly?</option><option value="yes">Yes</option><option value="no">No</option></select>
+      <select id="attrAC"><option value="">AC?</option><option value="yes">Yes</option><option value="no">No</option></select>
+      <select id="attrType"><option value="">Room type</option><option>single</option><option>double</option></select>
+      <select id="prefFood"><option value="">Food pref</option><option value="veg">Veg</option><option value="nonveg">Non-veg</option></select>
+    </div>
+
+    <button class="btn" id="checkBtn">Check Availability</button>
+    <div id="result" style="margin-top:10px;"></div>
+    <div class="small" style="margin-top:6px">Block-wise FREE rooms (click a block):</div>
+    <div id="blockSummary" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<div class="container card">
+  <h3>Room Numbers by Date</h3>
+  <p>Pick dates on the calendar (start → end/checkout) or above. Click a block to filter; click room chips to select.</p>
+  <div id="roomLists"></div>
+  <div style="margin-top:10px"><strong>Selected rooms:</strong> <span id="selectionOut" class="small">No rooms selected yet.</span></div>
+</div>
+
+<div class="container card" id="assignWrap" style="display:none">
+  <h3>Assign Occupants to Selected Rooms</h3>
+  <div id="assignPanel"></div>
+  <div id="assignSummary" class="small" style="margin-top:8px"></div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h3>Assistant</h3>
+    <div id="assistantOut" class="assistant"></div>
+    <div class="assistant-inputs">
+      <button class="btn ghost" id="micBtn">🎤 Speak</button>
+      <input type="text" id="assistantInput" placeholder="Type a question or “Book these rooms”…">
+      <button class="btn" id="sendBtn">Send</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer small">© The Club Mahabaleshwar — Static test build for review. All tariffs inclusive of GST.</footer>
+
+<script type="module" src="js/app.js?v=v7b"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+export async function loadJSON(p){const r=await fetch(p);if(!r.ok)throw new Error('load '+p);return r.json()}
